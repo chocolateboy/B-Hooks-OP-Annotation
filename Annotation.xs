@@ -3,101 +3,113 @@
 #include "XSUB.h"
 #include "ppport.h"
 
-#include "assert.h"
-
 #include "hook_op_annotation.h"
 
 typedef struct XOPAnnotation {
     OPAnnotation annotation;
     struct XOPAnnotation *prev;
     struct XOPAnnotation *next;
-    OPAnnotationGroup list;
 } XOPAnnotation;
 
 struct OPAnnotationGroup {
     XOPAnnotation *head;
-    OPAnnotationDtor dtor;
+    XOPAnnotation *tail;
 };
 
-STATIC void xop_annotation_free(XOPAnnotation *xannotation, OPAnnotationDtor dtor);
+STATIC XOPAnnotation * xop_annotation_new();
+STATIC void xop_annotation_free(XOPAnnotation *xannotation);
 
-STATIC void xop_annotation_free(XOPAnnotation *xannotation, OPAnnotationDtor dtor) {
-    if (dtor) {
-        CALL_FPTR(dtor)(aTHX_ xannotation->annotation.data);
+STATIC XOPAnnotation * xop_annotation_new() {
+    XOPAnnotation *xannotation;
+
+    Newxz(xannotation, 1, XOPAnnotation);
+
+    if (!xannotation) {
+        croak("B::Hooks::OP::Annotation: can't allocate op annotation");
+    }
+
+    return xannotation;
+}
+
+STATIC void xop_annotation_free(XOPAnnotation *xannotation) {
+    OPAnnotation annotation;
+
+    annotation = xannotation->annotation;
+
+    if (annotation.dtor && annotation.data) {
+        CALL_FPTR(annotation.dtor)(aTHX_ annotation.data);
     }
 
     Safefree(xannotation);
 }
 
-OPAnnotation * op_annotation_new(OPAnnotationGroup list, OPAnnotationPPAddr ppaddr, void *data) {
+/* the data and/or destructor can be assigned later */
+OPAnnotation * op_annotation_new(OPAnnotationGroup list, OPAnnotationPPAddr ppaddr, void *data, OPAnnotationDtor dtor) {
     XOPAnnotation *xannotation;
 
-    assert(list);
-    assert(ppaddr);
-
-    Newx(xannotation, 1, XOPAnnotation);
-
-    if (!xannotation) {
-        croak("B::Hooks::OP::Annotation: Can't allocate op annotation");
+    if (!list) {
+        croak("B::Hooks::OP::Annotation: no annotation group supplied");
     }
 
-    xannotation->annotation.data = data;
+    if (!ppaddr) {
+        croak("B::Hooks::OP::Annotation: no ppaddr supplied");
+    }
+
+    xannotation = xop_annotation_new();
     xannotation->annotation.ppaddr = ppaddr;
+    xannotation->annotation.data = data;
+    xannotation->annotation.dtor = dtor;
 
-    if (list->head) {
-        list->head->prev = xannotation;
-    }
-
-    xannotation->prev = NULL;
-    xannotation->next = list->head;
-    list->head = xannotation;
-
-    xannotation->list = list;
+    xannotation->next = list->head->next;
+    xannotation->prev = list->head;
+    list->head->next = xannotation;
 
     return (OPAnnotation *)xannotation;
 }
 
 void op_annotation_free(OPAnnotation *annotation) {
     XOPAnnotation *xannotation = (XOPAnnotation *)annotation;
-    OPAnnotationGroup list = xannotation->list;
 
-    if (xannotation->prev) {
-        xannotation->prev->next = xannotation->next;
+    if (!annotation) {
+        croak("B::Hooks::OP::Annotation: no annotation supplied");
     }
 
-    if (xannotation->next) {
-        xannotation->next->prev = xannotation->prev;
-    }
+    xannotation->next->prev = xannotation->prev;
+    xannotation->prev->next = xannotation->next;
 
-    if (xannotation == list->head) {
-        list->head = NULL;
-    }
-
-    xop_annotation_free(xannotation, list->dtor);
+    xop_annotation_free(xannotation);
 }
 
-OPAnnotationGroup op_annotation_group_new(OPAnnotationDtor dtor) {
+OPAnnotationGroup op_annotation_group_new() {
     OPAnnotationGroup list;
 
     Newx(list, 1, struct OPAnnotationGroup);
 
     if (!list) {
-        croak("B::Hooks::OP::Annotation: Can't allocate OP annotation group");
+        croak("B::Hooks::OP::Annotation: can't allocate annotation group");
     }
 
-    list->head = NULL;
-    list->dtor = dtor;
+    list->head = xop_annotation_new();
+    list->tail = xop_annotation_new();
+    list->head->next = list->tail;
+    list->tail->prev = list->head;
 
     return list;
 }
 
 void op_annotation_group_free(OPAnnotationGroup list) {
-    XOPAnnotation *xannotation;
-    OPAnnotationDtor dtor = list->dtor;
+    XOPAnnotation *xannotation, *next;
 
-    while ((xannotation = list->head)) {
-        list->head = xannotation->next;
-        xop_annotation_free(xannotation, dtor);
+    if (!list) {
+        croak("B::Hooks::OP::Annotation: no annotation group supplied");
+    }
+
+    xannotation = list->head;
+
+    while (xannotation) {
+        next = xannotation->next;
+        xop_annotation_free(xannotation);
+        xannotation = next;
     }
 
     Safefree(list);
