@@ -1,8 +1,12 @@
 Revision history for Perl extension B::Hooks::OP::Annotation.
 
-0.10  Wed Feb  4 04:26:02 GMT 2009
-        - API cleanup
-        - simplify/optimize groups
+0.20  Thu Feb 5 01:19:47 2009
+    - API overhaul - use a pull interface
+    - replace linked list with khash: http://tinyurl.com/3kkclt
 
-0.01  Wed Feb 4 01:40:17 GMT 2009
-        - original version; created by h2xs 1.23 with options -A -b5.8.0 --name=B::Hooks::OP::Annotation
+0.10  Wed Feb 4 04:26:02 2009
+    - API cleanup
+    - simplify/optimize groups
+
+0.01  Wed Feb 4 01:40:17 2009
+    - original version; created by h2xs 1.23 with options -A -b5.8.0 --name=B::Hooks::OP::Annotation

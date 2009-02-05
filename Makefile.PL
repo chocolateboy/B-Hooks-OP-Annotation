@@ -47,7 +47,16 @@ WriteMakefile(
     INC           => '-I.',
     OPTIMIZE      => $optimize,
     ($ExtUtils::MakeMaker::VERSION >= 6.31 ? (LICENSE => 'perl') : ()),
-    FUNCLIST      => [ qw(op_annotation_group_new op_annotation_new op_annotation_group_free op_annotation_free) ],
-    DL_FUNCS      => { 'B::Hooks::OP::Annotation' => [] },
+    FUNCLIST => [
+        qw(
+          op_annotation_group_new
+          op_annotation_group_free
+          op_annotation_get
+          op_annotation_set
+          op_annotation_delete
+          op_annotation_free
+        )
+    ],
+    DL_FUNCS => { 'B::Hooks::OP::Annotation' => [] },
     %$MAKEFILE_VARS
 );

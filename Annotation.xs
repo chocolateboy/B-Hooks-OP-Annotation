@@ -4,115 +4,144 @@
 #include "ppport.h"
 
 #include "hook_op_annotation.h"
+#include "khash.h"
 
-typedef struct XOPAnnotation {
-    OPAnnotation annotation;
-    struct XOPAnnotation *prev;
-    struct XOPAnnotation *next;
-} XOPAnnotation;
+#if PTRSIZE == 8
+KHASH_INIT(anno, OP *, OPAnnotation *, 1, kh_int64_hash_func, kh_int64_hash_equal);
+#else
+KHASH_INIT(anno, OP *, OPAnnotation *, 1, kh_int_hash_func, kh_int_hash_equal);
+#endif
 
-struct OPAnnotationGroup {
-    XOPAnnotation *head;
-    XOPAnnotation *tail;
-};
+/* get the annotation for the current OP from the hash table */
+OPAnnotation *op_annotation_get(OPAnnotationGroup table, OP *op) {
+    khiter_t k;
 
-STATIC XOPAnnotation * xop_annotation_new();
-STATIC void xop_annotation_free(XOPAnnotation *xannotation);
-
-STATIC XOPAnnotation * xop_annotation_new() {
-    XOPAnnotation *xannotation;
-
-    Newxz(xannotation, 1, XOPAnnotation);
-
-    if (!xannotation) {
-        croak("B::Hooks::OP::Annotation: can't allocate op annotation");
-    }
-
-    return xannotation;
-}
-
-STATIC void xop_annotation_free(XOPAnnotation *xannotation) {
-    OPAnnotation annotation;
-
-    annotation = xannotation->annotation;
-
-    if (annotation.dtor && annotation.data) {
-        CALL_FPTR(annotation.dtor)(aTHX_ annotation.data);
-    }
-
-    Safefree(xannotation);
-}
-
-/* the data and/or destructor can be assigned later */
-OPAnnotation * op_annotation_new(OPAnnotationGroup list, OPAnnotationPPAddr ppaddr, void *data, OPAnnotationDtor dtor) {
-    XOPAnnotation *xannotation;
-
-    if (!list) {
+    if (!table) {
         croak("B::Hooks::OP::Annotation: no annotation group supplied");
     }
 
-    if (!ppaddr) {
-        croak("B::Hooks::OP::Annotation: no ppaddr supplied");
+    if (!op) {
+        croak("B::Hooks::OP::Annotation: no OP supplied");
     }
 
-    xannotation = xop_annotation_new();
-    xannotation->annotation.ppaddr = ppaddr;
-    xannotation->annotation.data = data;
-    xannotation->annotation.dtor = dtor;
+    k = kh_get_anno(table, op);
 
-    xannotation->next = list->head->next;
-    xannotation->prev = list->head;
-    list->head->next = xannotation;
+    if (k == kh_end(table)) { /* not found */
+         croak("can't retrieve annotation: OP not found");
+    }
 
-    return (OPAnnotation *)xannotation;
+    return kh_value(table, k);
+}
+
+/* the data and/or destructor can be assigned lazily */
+OPAnnotation * op_annotation_set(OPAnnotationGroup table, OP * op, void *data, OPAnnotationDtor dtor) {
+    OPAnnotation *annotation;
+    OPAnnotation *old = NULL;
+    khiter_t k;
+    int ret;
+
+    if (!table) {
+        croak("B::Hooks::OP::Annotation: no annotation group supplied");
+    }
+
+    if (!op) {
+        croak("B::Hooks::OP::Annotation: no OP supplied");
+    }
+
+    Newx(annotation, 1, OPAnnotation);
+
+    if (!annotation) {
+        croak("B::Hooks::OP::Annotation: can't allocate annotation");
+    }
+
+    annotation->data = data;
+    annotation->dtor = dtor;
+    annotation->ppaddr = op->op_ppaddr;
+
+    /*
+     * kh_put returns an iterator, i.e. a key into the hash entries that can be used
+     * to insert the value
+     */ 
+
+    k = kh_put_anno(table, op, &ret);
+
+    /*
+     * ret:
+     *
+     *     0: entry is occupied
+     *     1: entry was empty
+     *     2: entry was deleted
+     */
+
+    if (ret == 0) {
+        old = kh_value(table, k);
+    }
+
+    kh_value(table, k) = annotation;
+
+    return old;
 }
 
 void op_annotation_free(OPAnnotation *annotation) {
-    XOPAnnotation *xannotation = (XOPAnnotation *)annotation;
-
     if (!annotation) {
         croak("B::Hooks::OP::Annotation: no annotation supplied");
     }
 
-    xannotation->next->prev = xannotation->prev;
-    xannotation->prev->next = xannotation->next;
-
-    xop_annotation_free(xannotation);
-}
-
-OPAnnotationGroup op_annotation_group_new() {
-    OPAnnotationGroup list;
-
-    Newx(list, 1, struct OPAnnotationGroup);
-
-    if (!list) {
-        croak("B::Hooks::OP::Annotation: can't allocate annotation group");
+    if (annotation->data) {
+        if (annotation->dtor) {
+            CALL_FPTR(annotation->dtor)(aTHX_ annotation->data);
+        } else {
+            warn("B::Hooks::OP::Annotation: can't free annotation: no dtor");
+        }
     }
 
-    list->head = xop_annotation_new();
-    list->tail = xop_annotation_new();
-    list->head->next = list->tail;
-    list->tail->prev = list->head;
-
-    return list;
+    Safefree(annotation);
 }
 
-void op_annotation_group_free(OPAnnotationGroup list) {
-    XOPAnnotation *xannotation, *next;
+void op_annotation_delete(OPAnnotationGroup table, OP *op) {
+    khiter_t k;
 
-    if (!list) {
+    if (!table) {
         croak("B::Hooks::OP::Annotation: no annotation group supplied");
     }
 
-    xannotation = list->head;
+    k = kh_get_anno(table, op);
 
-    while (xannotation) {
-        next = xannotation->next;
-        xop_annotation_free(xannotation);
-        xannotation = next;
+    if (k == kh_end(table)) { /* not found */
+        croak("B::Hooks::OP::Annotation: can't delete annotation: OP not found");
     }
 
-    Safefree(list);
+    op_annotation_free(kh_value(table, k));
+
+    kh_del_anno(table, k);
+}
+
+OPAnnotationGroup op_annotation_group_new() {
+    OPAnnotationGroup table;
+
+    table = kh_init_anno();
+
+    if (!table) {
+        croak("B::Hooks::OP::Annotation: can't allocate annotation group");
+    }
+
+    return table;
+}
+
+void op_annotation_group_free(OPAnnotationGroup table) {
+    khiter_t k;
+
+    if (!table) {
+        croak("B::Hooks::OP::Annotation: no annotation group supplied");
+    }
+
+    for (k = kh_begin(table); k != kh_end(table); ++k) {
+        if (kh_exist(table, k)) {
+            op_annotation_free(kh_value(table, k));
+        }
+    }
+
+    kh_destroy_anno(table);
 }
 
 MODULE = B::Hooks::OP::Annotation                PACKAGE = B::Hooks::OP::Annotation
