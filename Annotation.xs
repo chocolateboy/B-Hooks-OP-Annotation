@@ -7,9 +7,11 @@
 #include "khash.h"
 
 #if PTRSIZE == 8
-KHASH_INIT(anno, OP *, OPAnnotation *, 1, kh_int64_hash_func, kh_int64_hash_equal);
+#define op_annotation_hash_64(key) ((U32)((((UV)(key))) >> 33 ^ (((UV)(key))) ^ (((UV)(key))) << 11))
+KHASH_INIT(anno, OP *, OPAnnotation *, 1, op_annotation_hash_64, kh_int64_hash_equal);
 #else
-KHASH_INIT(anno, OP *, OPAnnotation *, 1, kh_int_hash_func, kh_int_hash_equal);
+#define op_annotation_hash_32(key) (U32)(key)
+KHASH_INIT(anno, OP *, OPAnnotation *, 1, op_annotation_hash_32, kh_int_hash_equal);
 #endif
 
 /* get the annotation for the current OP from the hash table */
@@ -82,7 +84,7 @@ OPAnnotation * op_annotation_set(OPAnnotationGroup table, OP * op, void *data, O
     return old;
 }
 
-void op_annotation_free(OPAnnotation *annotation) {
+void op_annotation_free(pTHX_ OPAnnotation *annotation) {
     if (!annotation) {
         croak("B::Hooks::OP::Annotation: no annotation supplied");
     }
@@ -98,7 +100,7 @@ void op_annotation_free(OPAnnotation *annotation) {
     Safefree(annotation);
 }
 
-void op_annotation_delete(OPAnnotationGroup table, OP *op) {
+void op_annotation_delete(pTHX_ OPAnnotationGroup table, OP *op) {
     khiter_t k;
 
     if (!table) {
@@ -111,7 +113,7 @@ void op_annotation_delete(OPAnnotationGroup table, OP *op) {
         croak("B::Hooks::OP::Annotation: can't delete annotation: OP not found");
     }
 
-    op_annotation_free(kh_value(table, k));
+    op_annotation_free(aTHX_ kh_value(table, k));
 
     kh_del_anno(table, k);
 }
@@ -128,7 +130,7 @@ OPAnnotationGroup op_annotation_group_new() {
     return table;
 }
 
-void op_annotation_group_free(OPAnnotationGroup table) {
+void op_annotation_group_free(pTHX_ OPAnnotationGroup table) {
     khiter_t k;
 
     if (!table) {
@@ -137,7 +139,7 @@ void op_annotation_group_free(OPAnnotationGroup table) {
 
     for (k = kh_begin(table); k != kh_end(table); ++k) {
         if (kh_exist(table, k)) {
-            op_annotation_free(kh_value(table, k));
+            op_annotation_free(aTHX_ kh_value(table, k));
         }
     }
 

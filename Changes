@@ -1,5 +1,10 @@
 Revision history for Perl extension B::Hooks::OP::Annotation.
 
+0.21  Sat Feb 7 03:50:37 2009
+    - portability fix
+    - fix destructor prototypes
+    - POD fixes
+
 0.20  Thu Feb 5 01:19:47 2009
     - API overhaul - use a pull interface
     - replace linked list with khash: http://tinyurl.com/3kkclt
