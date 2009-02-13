@@ -7,7 +7,7 @@ use warnings;
 
 use base qw(DynaLoader);
 
-our $VERSION = '0.21';
+our $VERSION = '0.30';
 
 sub dl_load_flags { 0x01 }
 
@@ -33,19 +33,14 @@ B::Hooks::OP::Annotation - Annotate and delegate hooked OPs
     }
 
     STATIC OP * mymodule_check_entersub(pTHX_ OP *op, void *unused) {
-        OPAnnotation * clobbered;
+        OPAnnotation * annotation;
         MyData * mydata;
 
         mydata = mymodule_get_mydata(); /* metadata to be associated with this op */
-
-        clobbered = op_annotation_set(MYMODULE_ANNOTATIONS, op, mydata, mymodule_mydata_free);
-
-        if (clobbered) {
-            op_annotation_free(aTHX_ clobbered);
-            croak("error: OP already annotated");
-        }
+        annotation = op_annotation_new(MYMODULE_ANNOTATIONS, op, mydata, mymodule_mydata_free);
 
         op->op_ppaddr = mymodule_entersub;
+
         return op;
     }
 
@@ -62,11 +57,11 @@ B::Hooks::OP::Annotation - Annotate and delegate hooked OPs
         if (ok) {
             return NORMAL;
         } else if (mymodule_stop_hooking(op)) { /* restore the previous op_ppaddr */
-            op->op_ppaddr = annotation->ppaddr;
+            op->op_ppaddr = annotation->op_ppaddr;
             op_annotation_delete(MYMODULE_ANNOTATIONS, op);
             return CALL_FPTR(op->op_ppaddr)(aTHX);
         } else {
-            return CALL_FPTR(annotation->ppaddr)(aTHX); /* delegate to the previous op_ppaddr */
+            return CALL_FPTR(annotation->op_ppaddr)(aTHX); /* delegate to the previous op_ppaddr */
         }
     }
 
@@ -135,17 +130,19 @@ following in their Makefile.PL:
 
 This struct contains the metadata associated with a particular OP i.e. the data itself, a destructor
 for that data, and the C<op_ppaddr> function that was defined when the annotation was created
-by L<"op_annotation_set">.
+by L<"op_annotation_new">.
 
 =over
 
-=item * C<ppaddr>, the C<op_ppaddr> function (of type L<"OPAnnotationPPAddr">) that is being replaced 
+=item * C<op_ppaddr>, the OP's previous C<op_ppaddr> function (of type L<"OPAnnotationPPAddr">)
 
-=item * C<data>, a C<void *> to metadata that should be associated with the current OP
+=item * C<data>, a C<void *> to metadata that should be associated with the OP
 
 =item * C<dtor>, a function (of type L<"OPAnnotationDtor">) used to free the metadata
 
 =back
+
+The fields are all read/write and can be modified after the annotation has been created.
 
 =head3 OPAnnotationGroup
 
@@ -169,25 +166,18 @@ This is the typedef for the destructor used to free the metadata associated with
 
 =head2 FUNCTIONS
 
-=head3 op_annotation_group_new
+=head3 op_annotation_new
 
-This function creates a new annotation group.
+This function creates and returns a new OP annotation.
 
-    OPAnnotationGroup op_annotation_group_new(void);
-
-=head3 op_annotation_group_free
-
-This function destroys the annotations in an annotation group and frees the memory allocated for the group.
-
-    void op_annotation_group_free(pTHX_ OPAnnotationGroup group);
-
-=head3 op_annotation_set
-
-This function annotates an OP with metadata that can later be recovered with L<"op_annotation_get">.
-It takes an L<"OPAnnotationGroup">, the current OP, a pointer to the metadata to be associated with the OP,
+It takes an L<"OPAnnotationGroup">, an OP, a pointer to the metadata to be associated with the OP,
 and a destructor for that data. The data can be NULL and the destructor can be NULL if no cleanup is required.
 
-    OPAnnotation * op_annotation_set(
+If an annotation has already been assigned for the OP, then it is replaced by the new annotation, and the
+old annotation is freed, triggering the destruction of its data (if supplied) by its
+destructor (if supplied).
+
+    OPAnnotation * op_annotation_new(
         OPAnnotationGroup group,
         OP *op,
         void *data,
@@ -204,17 +194,21 @@ assigned for the OP, it raises a fatal exception.
 =head3 op_annotation_delete
 
 This removes the specified annotation from the group and frees its memory. If a destructor was supplied,
-it is called on the value in the C<data> field.
+it is called on the value in the C<data> field (if supplied).
 
     void op_annotation_delete(pTHX_ OPAnnotationGroup group, OP *op);
 
-=head3 op_annotation_free
+=head3 op_annotation_group_new
 
-This calls the destructor (if supplied) on the data (if supplied) and then frees the memory allocated for the
-annotation. It should only be called on annotations that have been removed from their group i.e overwritten
-annotations returned by L<"op_annotation_set">.
+This function creates a new annotation group.
 
-    void op_annotation_free(pTHX_ OPAnnotation *annotation);
+    OPAnnotationGroup op_annotation_group_new(void);
+
+=head3 op_annotation_group_free
+
+This function destroys the annotations in an annotation group and frees the memory allocated for the group.
+
+    void op_annotation_group_free(pTHX_ OPAnnotationGroup group);
 
 =head1 EXPORT
 
@@ -222,7 +216,7 @@ None by default.
 
 =head1 VERSION
 
-0.21
+0.30
 
 =head1 SEE ALSO
 

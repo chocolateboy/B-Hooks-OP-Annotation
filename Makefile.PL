@@ -9,7 +9,8 @@ use Config;
 my $optimize;
 
 if ($Config{gccversion}) {
-    $optimize = '-O3 -Wall';
+    $optimize = '-O3 -Wall -ansi';
+    $optimize .= ' -g' if (-d '.svn');
 } elsif ($Config{osname} eq 'MSWin32') {
     $optimize = '-O2 -W4';
 } else {

@@ -10,18 +10,18 @@ typedef  OP *(*OPAnnotationPPAddr)(pTHX);
 typedef void (*OPAnnotationDtor)(pTHX_ void *data);
 
 typedef struct {
-    OPAnnotationPPAddr ppaddr;
+    OPAnnotationPPAddr op_ppaddr;
     void *data;
     OPAnnotationDtor dtor;
 } OPAnnotation;
 
+OPAnnotation * op_annotation_new(OPAnnotationGroup group, OP *op, void *data, OPAnnotationDtor dtor);
+OPAnnotation * op_annotation_get(OPAnnotationGroup group, OP *op);
+void op_annotation_delete(pTHX_ OPAnnotationGroup table, OP * annotation);
+
 OPAnnotationGroup op_annotation_group_new();
 void op_annotation_group_free(pTHX_ OPAnnotationGroup group);
-OPAnnotation * op_annotation_get(OPAnnotationGroup group, OP *op);
-OPAnnotation * op_annotation_set(OPAnnotationGroup group, OP *op, void *data, OPAnnotationDtor dtor);
-void op_annotation_delete(pTHX_ OPAnnotationGroup table, OP * annotation);
-void op_annotation_free(pTHX_ OPAnnotation *annotation);
 
 END_EXTERN_C
 
-#endif
+#endif /* __HOOK_OP_ANNOTATION_H__ */
