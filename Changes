@@ -1,5 +1,8 @@
 Revision history for Perl extension B::Hooks::OP::Annotation.
 
+0.31  Sun Feb 15 02:43:49 2009
+    - Makefile.PL fixlet
+
 0.30  Fri Feb 13 16:02:55 2009
     - API change
       - don't expose annotation destructor

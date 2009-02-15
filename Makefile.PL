@@ -9,7 +9,7 @@ use Config;
 my $optimize;
 
 if ($Config{gccversion}) {
-    $optimize = '-O3 -Wall -ansi';
+    $optimize = '-O3 -Wall -Wextra';
     $optimize .= ' -g' if (-d '.svn');
 } elsif ($Config{osname} eq 'MSWin32') {
     $optimize = '-O2 -W4';
@@ -50,12 +50,11 @@ WriteMakefile(
     ($ExtUtils::MakeMaker::VERSION >= 6.31 ? (LICENSE => 'perl') : ()),
     FUNCLIST => [
         qw(
+          op_annotation_new
+          op_annotation_get
+          op_annotation_delete
           op_annotation_group_new
           op_annotation_group_free
-          op_annotation_get
-          op_annotation_set
-          op_annotation_delete
-          op_annotation_free
         )
     ],
     DL_FUNCS => { 'B::Hooks::OP::Annotation' => [] },

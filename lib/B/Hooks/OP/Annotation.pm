@@ -7,7 +7,7 @@ use warnings;
 
 use base qw(DynaLoader);
 
-our $VERSION = '0.30';
+our $VERSION = '0.31';
 
 sub dl_load_flags { 0x01 }
 
@@ -216,7 +216,7 @@ None by default.
 
 =head1 VERSION
 
-0.30
+0.31
 
 =head1 SEE ALSO
 

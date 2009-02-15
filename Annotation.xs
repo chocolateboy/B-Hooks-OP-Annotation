@@ -115,12 +115,8 @@ STATIC void op_annotation_free(pTHX_ OPAnnotation *annotation) {
         croak("B::Hooks::OP::Annotation: no annotation supplied");
     }
 
-    if (annotation->data) {
-        if (annotation->dtor) {
-            CALL_FPTR(annotation->dtor)(aTHX_ annotation->data);
-        } else {
-            /* warn("B::Hooks::OP::Annotation: can't free annotation data: no dtor"); */
-        }
+    if (annotation->data && annotation->dtor) {
+        CALL_FPTR(annotation->dtor)(aTHX_ annotation->data);
     }
 
     Safefree(annotation);
