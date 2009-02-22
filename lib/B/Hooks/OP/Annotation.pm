@@ -7,7 +7,7 @@ use warnings;
 
 use base qw(DynaLoader);
 
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 
 sub dl_load_flags { 0x01 }
 
@@ -100,28 +100,36 @@ L<ExtUtils::Depends|ExtUtils::Depends>. Modules that wish to use these exports i
 C<use B::OP::Hooks::Annotation> in the Perl module that loads the XS, and include something like the
 following in their Makefile.PL:
 
-    my $XS_DEPENDENCIES = eval {
-        require ExtUtils::Depends;
-        my %hash = ExtUtils::Depends->new(
-            'Your::XS::Module' => 'B::Hooks::OP::Annotation', B::Hooks::OP::Check
-        )->get_makefile_vars();
-        \%hash
-    } || {};
+    use ExtUtils::MakeMaker;
+    use ExtUtils::Depends;
 
-    warn $@ if ($@);
+    our %XS_PREREQUISITES = (
+        'B::Hooks::OP::Annotation' => '0.32',
+        'B::Hooks::OP::Check'      => '0.15',
+    );
+
+    our %XS_DEPENDENCIES = ExtUtils::Depends->new(
+        'mysubs',
+        keys(%XS_PREREQUISITES)
+    )->get_makefile_vars();
 
     WriteMakefile(
-        NAME => 'Your::XS::Module',
-        # ...
+        NAME          => 'Your::XS::Module',
+        VERSION_FROM  => 'lib/Your/XS/Module.pm',
         PREREQ_PM => {
-            # ...
-            'B::Hooks::OP::Check'      => 0,
-            'B::Hooks::OP::Annotation' => 0,
-            'ExtUtils::Depends'        => 0,
-            # ...
+            'B::Hooks::EndOfScope' => '0.07',
+            %XS_PREREQUISITES
         },
+        ($ExtUtils::MakeMaker::VERSION >= 6.46 ?
+            (META_MERGE => {
+                configure_requires => {
+                    'ExtUtils::Depends' => '0.301',
+                    %XS_PREREQUISITES
+                }})
+            : ()
+        ),
+        %XS_DEPENDENCIES,
         # ...
-        %$XS_DEPENDENCIES
     );
 
 =head2 TYPES
@@ -216,7 +224,7 @@ None by default.
 
 =head1 VERSION
 
-0.31
+0.32
 
 =head1 SEE ALSO
 

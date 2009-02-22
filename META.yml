@@ -1,12 +1,13 @@
 --- #YAML:1.0
 name:               B-Hooks-OP-Annotation
-version:            0.31
+version:            0.32
 abstract:           Annotate and delegate hooked OPs
 author:
     - chocolateboy <chocolate@cpan.org>
 license:            perl
 distribution_type:  module
 configure_requires:
+    ExtUtils::Depends:    0.301
     ExtUtils::MakeMaker:  0
 requires:
     ExtUtils::Depends:  0.301
