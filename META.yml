@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               B-Hooks-OP-Annotation
-version:            0.40
+version:            0.41
 abstract:           annotate and delegate hooked OPs
 author:
     - chocolateboy <chocolate@cpan.org>

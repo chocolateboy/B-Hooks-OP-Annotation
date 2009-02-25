@@ -8,8 +8,22 @@
 
 #if PTRSIZE == 8
     /*
-     * This is one of Bob Jenkins' hash functions for 32-bit values
-     * copied from: http://www.concentric.net/~Ttwang/tech/inthash.htm
+     * This is one of Thomas Wang's hash functions for 64-bit integers from:
+     * http://www.concentric.net/~Ttwang/tech/inthash.htm
+     */
+    U32 hash(PTRV u) {
+        u = (~u) + (u << 18);
+        u = u ^ (u >> 31);
+        u = u * 21;
+        u = u ^ (u >> 11);
+        u = u + (u << 6);
+        u = u ^ (u >> 22);
+        return (U32)u;
+    }
+#else
+    /*
+     * This is one of Bob Jenkins' hash functions for 32-bit integers
+     * from: http://burtleburtle.net/bob/hash/integer.html
      */
     U32 hash(PTRV u) {
         u = (u + 0x7ed55d16) + (u << 12);
@@ -19,17 +33,6 @@
         u = (u + 0xfd7046c5) + (u << 3);
         u = (u ^ 0xb55a4f09) ^ (u >> 16);
         return u;
-    }
-#else
-    /* This is one of Thomas Wang's hash functions for 64-bit values from the same page */
-    U32 hash(PTRV u) {
-        u = (~u) + (u << 18);
-        u = u ^ (u >> 31);
-        u = u * 21;
-        u = u ^ (u >> 11);
-        u = u + (u << 6);
-        u = u ^ (u >> 22);
-        return (U32)u;
     }
 #endif
 
