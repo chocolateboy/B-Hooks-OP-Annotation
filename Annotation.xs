@@ -4,26 +4,22 @@
 #include "ppport.h"
 
 #include "hook_op_annotation.h"
-#include "khash.h"
 
-#if PTRSIZE == 8
-#  define op_annotation_hash_64(key) (U32)(PTR2nat(key) >> 33 ^ PTR2nat(key) ^ PTR2nat(key) << 11)
-   KHASH_INIT(anno, OP *, OPAnnotation *, 1, op_annotation_hash_64, kh_int64_hash_equal)
-#else
-#  define op_annotation_hash_32(key) (U32)(key)
-   KHASH_INIT(anno, OP *, OPAnnotation *, 1, op_annotation_hash_32, kh_int_hash_equal)
-#endif
+#define __PACKAGE__ "B::Hooks::OP::Annotation"
+#include "optable.h"
 
-#undef __ac_X31_hash_string
+#define OP_ANNOTATION_INITIAL_SIZE 2
+#define OP_ANNOTATION_THRESHOLD 0.65
 
 STATIC void op_annotation_free(pTHX_ OPAnnotation *annotation);
 
+void op_annotatate(OPAnnotationGroup table, OP * op, void *data, OPAnnotationDtor dtor) {
+    (void)op_annotation_new(table, op, data, dtor);
+}
+
 /* the data and/or destructor can be assigned later */
 OPAnnotation * op_annotation_new(OPAnnotationGroup table, OP * op, void *data, OPAnnotationDtor dtor) {
-    OPAnnotation *annotation;
-    OPAnnotation *old = NULL;
-    khiter_t k;
-    int ret;
+    OPAnnotation *annotation, *old;
 
     if (!table) {
         croak("B::Hooks::OP::Annotation: no annotation group supplied");
@@ -43,26 +39,7 @@ OPAnnotation * op_annotation_new(OPAnnotationGroup table, OP * op, void *data, O
     annotation->dtor = dtor;
     annotation->op_ppaddr = op->op_ppaddr;
 
-    /*
-     * kh_put returns an iterator, i.e. a key into the hash entries that can be used
-     * to insert the value
-     */ 
-
-    k = kh_put(anno)(table, op, &ret);
-
-    /*
-     * ret:
-     *
-     *     0: entry is occupied
-     *     1: entry was empty
-     *     2: entry was deleted
-     */
-
-    if (ret == 0) {
-        old = kh_value(table, k);
-    }
-
-    kh_value(table, k) = annotation;
+    old = OPTable_store(table, op, annotation);
 
     if (old) {
         op_annotation_free(aTHX_ old);
@@ -73,7 +50,7 @@ OPAnnotation * op_annotation_new(OPAnnotationGroup table, OP * op, void *data, O
 
 /* get the annotation for the current OP from the hash table */
 OPAnnotation *op_annotation_get(OPAnnotationGroup table, OP *op) {
-    khiter_t k;
+    OPAnnotation *annotation;
 
     if (!table) {
         croak("B::Hooks::OP::Annotation: no annotation group supplied");
@@ -83,31 +60,29 @@ OPAnnotation *op_annotation_get(OPAnnotationGroup table, OP *op) {
         croak("B::Hooks::OP::Annotation: no OP supplied");
     }
 
-    k = kh_get(anno)(table, op);
+    annotation = OPTable_fetch(table, op);
 
-    if (k == kh_end(table)) { /* not found */
+    if (!annotation) {
          croak("can't retrieve annotation: OP not found");
     }
 
-    return kh_value(table, k);
+    return annotation;
 }
 
 void op_annotation_delete(pTHX_ OPAnnotationGroup table, OP *op) {
-    khiter_t k;
+    OPAnnotation *annotation;
 
     if (!table) {
         croak("B::Hooks::OP::Annotation: no annotation group supplied");
     }
 
-    k = kh_get(anno)(table, op);
+    annotation = OPTable_delete(table, op);
 
-    if (k == kh_end(table)) { /* not found */
+    if (!annotation) {
         croak("B::Hooks::OP::Annotation: can't delete annotation: OP not found");
     }
 
-    op_annotation_free(aTHX_ kh_value(table, k));
-
-    kh_del(anno)(table, k);
+    op_annotation_free(aTHX_ annotation);
 }
 
 STATIC void op_annotation_free(pTHX_ OPAnnotation *annotation) {
@@ -125,7 +100,7 @@ STATIC void op_annotation_free(pTHX_ OPAnnotation *annotation) {
 OPAnnotationGroup op_annotation_group_new() {
     OPAnnotationGroup table;
 
-    table = kh_init(anno)();
+    table = OPTable_new(OP_ANNOTATION_INITIAL_SIZE, OP_ANNOTATION_THRESHOLD);
 
     if (!table) {
         croak("B::Hooks::OP::Annotation: can't allocate annotation group");
@@ -135,20 +110,12 @@ OPAnnotationGroup op_annotation_group_new() {
 }
 
 void op_annotation_group_free(pTHX_ OPAnnotationGroup table) {
-    khiter_t k;
-
     if (!table) {
         croak("B::Hooks::OP::Annotation: no annotation group supplied");
     }
 
-    for (k = kh_begin(table); k != kh_end(table); ++k) {
-        if (kh_exist(table, k)) {
-            op_annotation_free(aTHX_ kh_value(table, k));
-        }
-    }
-
-    kh_clear(anno)(table);
-    kh_destroy(anno)(table);
+    OPTable_clear(aTHX_ table, op_annotation_free);
+    OPTable_free(table);
 }
 
 MODULE = B::Hooks::OP::Annotation                PACKAGE = B::Hooks::OP::Annotation

@@ -15,8 +15,9 @@ typedef struct {
     OPAnnotationDtor dtor;
 } OPAnnotation;
 
-OPAnnotation * op_annotation_new(OPAnnotationGroup group, OP *op, void *data, OPAnnotationDtor dtor);
 OPAnnotation * op_annotation_get(OPAnnotationGroup group, OP *op);
+OPAnnotation * op_annotation_new(OPAnnotationGroup group, OP *op, void *data, OPAnnotationDtor dtor);
+void op_annotatate(OPAnnotationGroup table, OP * op, void *data, OPAnnotationDtor dtor);
 void op_annotation_delete(pTHX_ OPAnnotationGroup table, OP * annotation);
 
 OPAnnotationGroup op_annotation_group_new();

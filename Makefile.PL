@@ -10,8 +10,8 @@ use Config;
 our $OPTIMIZE;
 
 if ($Config{gccversion}) {
-    $OPTIMIZE = '-O3 -Wall -Wextra -Wdeclaration-after-statement';
-    $OPTIMIZE .= ' -g' if (-d '.svn');
+    $OPTIMIZE = '-O3 -Wall -W';
+    $OPTIMIZE .= ' -g -Wdeclaration-after-statement' if (-d '.svn');
 } elsif ($Config{osname} eq 'MSWin32') {
     $OPTIMIZE = '-O2 -W4';
 } else {
@@ -28,6 +28,7 @@ $package->save_config('Files.pm');
 our %MAKEFILE_VARS = $package->get_makefile_vars();
 
 my $clean = $MAKEFILE_VARS{clean};
+
 $clean->{FILES} .= ' Files.pm' if ($clean);
 
 WriteMakefile(
@@ -41,6 +42,7 @@ WriteMakefile(
     INC           => '-I.',
     FUNCLIST => [
         qw(
+          op_annotate
           op_annotation_new
           op_annotation_get
           op_annotation_delete

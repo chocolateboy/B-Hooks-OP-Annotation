@@ -1,7 +1,7 @@
 Annotation.xs
 Changes
 hook_op_annotation.h
-khash.h
+optable.h
 lib/B/Hooks/OP/Annotation.pm
 Makefile.PL
 MANIFEST			This list of files

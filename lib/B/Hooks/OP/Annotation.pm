@@ -7,7 +7,7 @@ use warnings;
 
 use base qw(DynaLoader);
 
-our $VERSION = '0.32';
+our $VERSION = '0.40';
 
 sub dl_load_flags { 0x01 }
 
@@ -19,7 +19,7 @@ __END__
 
 =head1 NAME
 
-B::Hooks::OP::Annotation - Annotate and delegate hooked OPs
+B::Hooks::OP::Annotation - annotate and delegate hooked OPs
 
 =head1 SYNOPSIS
 
@@ -33,12 +33,10 @@ B::Hooks::OP::Annotation - Annotate and delegate hooked OPs
     }
 
     STATIC OP * mymodule_check_entersub(pTHX_ OP *op, void *unused) {
-        OPAnnotation * annotation;
         MyData * mydata;
 
-        mydata = mymodule_get_mydata(); /* metadata to be associated with this op */
-        annotation = op_annotation_new(MYMODULE_ANNOTATIONS, op, mydata, mymodule_mydata_free);
-
+        mydata = mymodule_get_mydata(); /* metadata to be associated with this OP */
+        op_annotate(MYMODULE_ANNOTATIONS, op, mydata, mymodule_mydata_free);
         op->op_ppaddr = mymodule_entersub;
 
         return op;
@@ -104,13 +102,13 @@ following in their Makefile.PL:
     use ExtUtils::Depends;
 
     our %XS_PREREQUISITES = (
-        'B::Hooks::OP::Annotation' => '0.32',
+        'B::Hooks::OP::Annotation' => '0.40',
         'B::Hooks::OP::Check'      => '0.15',
     );
 
     our %XS_DEPENDENCIES = ExtUtils::Depends->new(
-        'mysubs',
-        keys(%XS_PREREQUISITES)
+        'Your::XS::Module',
+         keys(%XS_PREREQUISITES)
     )->get_makefile_vars();
 
     WriteMakefile(
@@ -138,7 +136,7 @@ following in their Makefile.PL:
 
 This struct contains the metadata associated with a particular OP i.e. the data itself, a destructor
 for that data, and the C<op_ppaddr> function that was defined when the annotation was created
-by L<"op_annotation_new">.
+by L<"op_annotate"> or L<"op_annotation_new">.
 
 =over
 
@@ -192,6 +190,18 @@ destructor (if supplied).
         OPAnnotationDtor dtor
     );
 
+=head3 op_annotate
+
+This function is a void version of L<"op_annotation_new"> for cases where the new annotation is
+not needed.
+
+    void op_annotate(
+        OPAnnotationGroup group,
+        OP *op,
+        void *data,
+        OPAnnotationDtor dtor
+    );
+
 =head3 op_annotation_get
 
 This retrieves the annotation associated with the supplied OP. If an annotation has not been
@@ -224,7 +234,7 @@ None by default.
 
 =head1 VERSION
 
-0.32
+0.40
 
 =head1 SEE ALSO
 

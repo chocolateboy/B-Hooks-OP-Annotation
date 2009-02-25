@@ -1,4 +1,4 @@
-B-Hooks-OP-Annotation version 0.32
+B-Hooks-OP-Annotation version 0.40
 ==================================
 
 This module allows XS modules to annotate and delegate hooked OPs.
