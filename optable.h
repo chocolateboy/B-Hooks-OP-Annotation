@@ -108,7 +108,7 @@ STATIC OPAnnotation *OPTable_delete(OPTable *table, OP *op) {
             if (prev) {
                 prev->next = entry->next;
             } else {
-                table->array[index] = NULL;
+                table->array[index] = entry->next;
             }
 
             --(table->items);

@@ -1,5 +1,8 @@
 Revision history for Perl extension B::Hooks::OP::Annotation.
 
+0.42  Thu Feb 26 01:44:26 2009
+    - fix deletion
+
 0.41  Wed Feb 25 23:18:35 2009
     - fix hash function
 

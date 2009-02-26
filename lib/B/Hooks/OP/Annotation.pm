@@ -7,7 +7,7 @@ use warnings;
 
 use base qw(DynaLoader);
 
-our $VERSION = '0.41';
+our $VERSION = '0.42';
 
 sub dl_load_flags { 0x01 }
 
@@ -102,7 +102,7 @@ following in their Makefile.PL:
     use ExtUtils::Depends;
 
     our %XS_PREREQUISITES = (
-        'B::Hooks::OP::Annotation' => '0.41',
+        'B::Hooks::OP::Annotation' => '0.42',
         'B::Hooks::OP::Check'      => '0.15',
     );
 
@@ -234,7 +234,7 @@ None by default.
 
 =head1 VERSION
 
-0.41
+0.42
 
 =head1 SEE ALSO
 
