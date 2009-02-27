@@ -1,5 +1,8 @@
 Revision history for Perl extension B::Hooks::OP::Annotation.
 
+0.43  Fri Feb 27 00:40:07 2009
+    - #43682: fix typo in function name (thanks Taro Nishino)
+
 0.42  Thu Feb 26 01:44:26 2009
     - fix deletion
 

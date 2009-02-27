@@ -13,7 +13,7 @@
 
 STATIC void op_annotation_free(pTHX_ OPAnnotation *annotation);
 
-void op_annotatate(OPAnnotationGroup table, OP * op, void *data, OPAnnotationDtor dtor) {
+void op_annotate(OPAnnotationGroup table, OP * op, void *data, OPAnnotationDtor dtor) {
     (void)op_annotation_new(table, op, data, dtor);
 }
 
