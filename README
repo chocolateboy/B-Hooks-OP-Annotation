@@ -1,4 +1,4 @@
-B-Hooks-OP-Annotation version 0.43
+B-Hooks-OP-Annotation version 0.44
 ==================================
 
 This module allows XS modules to annotate and delegate hooked OPs.
@@ -23,7 +23,7 @@ COPYRIGHT AND LICENCE
 
 Put the correct copyright and licence information here.
 
-Copyright (C) 2009 by chocolateboy
+Copyright (C) 2009-2011 by chocolateboy
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.10.0 or,

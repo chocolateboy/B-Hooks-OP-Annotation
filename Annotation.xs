@@ -91,7 +91,7 @@ STATIC void op_annotation_free(pTHX_ OPAnnotation *annotation) {
     }
 
     if (annotation->data && annotation->dtor) {
-        CALL_FPTR(annotation->dtor)(aTHX_ annotation->data);
+        annotation->dtor(aTHX_ annotation->data);
     }
 
     Safefree(annotation);

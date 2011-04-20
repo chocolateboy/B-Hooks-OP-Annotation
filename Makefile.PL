@@ -3,15 +3,15 @@ use 5.008000;
 use strict;
 use warnings;
 
-use ExtUtils::MakeMaker;
-use ExtUtils::Depends;
 use Config;
+use ExtUtils::Depends;
+use ExtUtils::MakeMaker;
 
 our $OPTIMIZE;
 
 if ($Config{gccversion}) {
     $OPTIMIZE = '-O3 -Wall -W';
-    $OPTIMIZE .= ' -g -Wdeclaration-after-statement' if (-d '.svn');
+    $OPTIMIZE .= ' -g -Wdeclaration-after-statement' if (-d 'dev');
 } elsif ($Config{osname} eq 'MSWin32') {
     $OPTIMIZE = '-O2 -W4';
 } else {
@@ -34,7 +34,7 @@ $clean->{FILES} .= ' Files.pm' if ($clean);
 WriteMakefile(
     NAME          => 'B::Hooks::OP::Annotation',
     VERSION_FROM  => 'lib/B/Hooks/OP/Annotation.pm',
-    PREREQ_PM     => { 'ExtUtils::Depends' => '0.301' },
+    PREREQ_PM     => { 'ExtUtils::Depends' => '0.304' },
     ABSTRACT_FROM => 'lib/B/Hooks/OP/Annotation.pm',
     AUTHOR        => 'chocolateboy <chocolate@cpan.org>',
     LIBS          => [''],
@@ -52,9 +52,12 @@ WriteMakefile(
     ],
     DL_FUNCS => { 'B::Hooks::OP::Annotation' => [] },
     OPTIMIZE => $OPTIMIZE,
-    ($ExtUtils::MakeMaker::VERSION >= 6.31 ? (LICENSE => 'perl') : ()),
-    ($ExtUtils::MakeMaker::VERSION >= 6.46 ?
-        (META_MERGE => { configure_requires => { 'ExtUtils::Depends' => '0.301' } }) :
+    (eval($ExtUtils::MakeMaker::VERSION) >= 6.31 ? (LICENSE => 'perl') : ()),
+    (eval($ExtUtils::MakeMaker::VERSION) >= 6.46 ?
+        (META_MERGE => {
+            configure_requires => { 'ExtUtils::Depends' => '0.304' },
+            resources          => { repository => 'http://github.com/chocolateboy/B-Hooks-OP-Annotation' },
+        }) :
         ()
     ),
     %MAKEFILE_VARS

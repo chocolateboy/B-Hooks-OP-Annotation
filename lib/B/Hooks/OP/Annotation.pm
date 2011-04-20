@@ -7,7 +7,7 @@ use warnings;
 
 use base qw(DynaLoader);
 
-our $VERSION = '0.43';
+our $VERSION = '0.44';
 
 sub dl_load_flags { 0x01 }
 
@@ -46,7 +46,7 @@ B::Hooks::OP::Annotation - annotate and delegate hooked OPs
         OPAnnotation * annotation;
         MyData * mydata;
         OP *op = PL_op;
-        
+
         annotation = op_annotation_get(MYMODULE_ANNOTATIONS, op);
         mydata = (MyData *)annotation->data;
 
@@ -57,9 +57,9 @@ B::Hooks::OP::Annotation - annotate and delegate hooked OPs
         } else if (mymodule_stop_hooking(op)) { /* restore the previous op_ppaddr */
             op->op_ppaddr = annotation->op_ppaddr;
             op_annotation_delete(MYMODULE_ANNOTATIONS, op);
-            return CALL_FPTR(op->op_ppaddr)(aTHX);
+            return op->op_ppaddr(aTHX);
         } else {
-            return CALL_FPTR(annotation->op_ppaddr)(aTHX); /* delegate to the previous op_ppaddr */
+            return annotation->op_ppaddr(aTHX); /* delegate to the previous op_ppaddr */
         }
     }
 
@@ -102,7 +102,7 @@ following in their Makefile.PL:
     use ExtUtils::Depends;
 
     our %XS_PREREQUISITES = (
-        'B::Hooks::OP::Annotation' => '0.43',
+        'B::Hooks::OP::Annotation' => '0.44',
         'B::Hooks::OP::Check'      => '0.15',
     );
 
@@ -234,7 +234,7 @@ None by default.
 
 =head1 VERSION
 
-0.43
+0.44
 
 =head1 SEE ALSO
 
@@ -252,7 +252,7 @@ chocolateboy <chocolate@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2009 chocolateboy
+Copyright (c) 2009-2011 chocolateboy
 
 This module is free software.
 
