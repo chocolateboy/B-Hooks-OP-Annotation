@@ -1,3 +1,31 @@
+# B::Hooks::OP::Annotation
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [NAME](#name)
+- [SYNOPSIS](#synopsis)
+- [DESCRIPTION](#description)
+  - [TYPES](#types)
+    - [OPAnnotation](#opannotation)
+    - [OPAnnotationGroup](#opannotationgroup)
+    - [OPAnnotationPPAddr](#opannotationppaddr)
+    - [OPAnnotationDtor](#opannotationdtor)
+  - [FUNCTIONS](#functions)
+    - [op_annotation_new](#op_annotation_new)
+    - [op_annotate](#op_annotate)
+    - [op_annotation_get](#op_annotation_get)
+    - [op_annotation_delete](#op_annotation_delete)
+    - [op_annotation_group_new](#op_annotation_group_new)
+    - [op_annotation_group_free](#op_annotation_group_free)
+- [EXPORT](#export)
+- [VERSION](#version)
+- [SEE ALSO](#see-also)
+- [AUTHOR](#author)
+- [COPYRIGHT AND LICENSE](#copyright-and-license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # NAME
 
 B::Hooks::OP::Annotation - annotate and delegate hooked OPs
