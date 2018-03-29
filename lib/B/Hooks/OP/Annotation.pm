@@ -252,10 +252,9 @@ chocolateboy <chocolate@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2009-2011 chocolateboy
+Copyright (c) 2009-2011 by chocolateboy.
 
-This module is free software.
-
-You may distribute this code under the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under the terms of the
+Artistic License 2.0.
 
 =cut

@@ -21,10 +21,7 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Put the correct copyright and licence information here.
+Copyright (c) 2009-2011 by chocolateboy.
 
-Copyright (C) 2009-2011 by chocolateboy
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.10.0 or,
-at your option, any later version of Perl 5 you may have available.
+This is free software; you can redistribute it and/or modify it under the terms of the
+Artistic License 2.0.

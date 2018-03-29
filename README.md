@@ -1,5 +1,9 @@
 # B::Hooks::OP::Annotation
 
+[![Build Status](https://secure.travis-ci.org/chocolateboy/B-Hooks-OP-Annotation.svg)](http://travis-ci.org/chocolateboy/B-Hooks-OP-Annotation)
+[![CPAN Version](https://badge.fury.io/pl/B-Hooks-OP-Annotation.svg)](http://badge.fury.io/pl/B-Hooks-OP-Annotation)
+[![License](https://img.shields.io/badge/license-artistic-blue.svg)](https://github.com/chocolateboy/B-Hooks-OP-Annotation/blob/master/LICENSE.md)
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -270,6 +274,7 @@ None by default.
 
 # COPYRIGHT AND LICENSE
 
-Copyright (c) 2009-2011 chocolateboy
+Copyright © 2009-2011 by chocolateboy.
 
-This module is free software. You may distribute it under the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under the terms of the
+[Artistic License 2.0](http://www.opensource.org/licenses/artistic-license-2.0.php).
